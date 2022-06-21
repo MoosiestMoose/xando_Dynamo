@@ -4,11 +4,13 @@ Noughts and crosses in Dynamo Revit!
 ## Welcome to noughts and crosses in Dynamo player!
 By [MoosiestMoose](https://www.github.com/MoosiestMoose) and [lukeroot](https://www.github.com/lukeroot) 
 
-1 - Open the floor plan "play the game"
+1 - Open Revit 21 
 
-2 - Run in Dynamo player.
+2 - Open the floor plan "play the game"
 
-3 - A pop up will appear on your first run
+3 - Run in Dynamo player.
+
+4 - A pop up will appear on your first run
 
 Each run will:
 Let you move: click your square and hit Esc key.
@@ -20,3 +22,5 @@ The Os and Xs are 3D families.
 When the game is over you'll get another pop-up
 
 Enjoy! 
+
+Rvt 21, Dynamo 2.6.1
