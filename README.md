@@ -13,10 +13,13 @@ By [MoosiestMoose](https://www.github.com/MoosiestMoose) and [lukeroot](https://
 4 - A pop up will appear on your first run
 
 Each run will:
-Let you move: click your square and hit Esc key.
+
+Let you move - click your square and hit Esc key.
+
 Let the PC move: random.
 
 You must play in the floor plan but you can view in 3D.
+
 The Os and Xs are 3D families. 
 
 When the game is over you'll get another pop-up
