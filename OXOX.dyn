@@ -2,7 +2,7 @@
   "Uuid": "ecb98715-c6e0-4344-b5d8-a9e618d85bbb",
   "IsCustomNode": false,
   "Description": null,
-  "Name": "OXOX4.DYN",
+  "Name": "OXOX",
   "ElementResolver": {
     "ResolutionMap": {}
   },
@@ -196,7 +196,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import random \r\n\r\nmoose = [ ] \r\nwins = [ # possible win combos\r\n\trange(0, 2 + 1), # rows\r\n\trange(3, 5 + 1),\r\n\trange(6, 8 + 1),\r\n\trange(0, 6 + 1, 3), # cols\r\n\trange(1, 7 + 1, 3),\r\n\trange(2, 8 + 1, 3),\r\n\trange(0, 8 + 1, 4), # diags\r\n\trange(2, 6 + 1, 2),\r\n]\r\n\r\ndef check_win():\r\n\tfor possible_pos in range(len(wins)): # loop all possible win combos\r\n\t\tpossible_winner = ''\r\n\t\tfor pos in range(len(wins[possible_pos])): # loop current win positions\r\n\t\t\tcurrent = board[wins[possible_pos][pos]] # get current board value from this possible win position\r\n\t\t\tif current == False: # ignore if not x or o\r\n\t\t\t\tbreak\r\n\t\t\tif not pos: # store x or o if this is the start of the current check and skip\r\n\t\t\t\tpossible_winner = current\r\n\t\t\t\tcontinue\r\n\t\t\tif possible_winner != current: # if position value differs, no win given\r\n\t\t\t\tbreak\r\n\t\t\tif (pos == 2 and possible_winner == current): # if all positions in win combo match then a win is given\r\n\t\t\t\treturn possible_winner\r\n\treturn False # otherwise False is given\r\n\r\ndef get_computer_move():\r\n\tpossible_moves = []\r\n\tfor index, value in enumerate(board):\r\n\t\tif value is not False:\r\n\t\t    continue\r\n\t\tpossible_moves.append(index)\r\n\tcomputer_move = possible_moves[random.randrange(len(possible_moves))]\r\n\tboard[computer_move] = \"O\"\r\n\treturn computer_move  \t\t\r\n\r\ntry: \r\n\tmoves = IN[0]\r\n\tturn = len(moves)\r\nexcept:\r\n\tmoves = [[False*9]]\r\n\tturn = len(moves)\r\n\r\nboard = [False for pos in range(9)]\r\n\r\nfor move_index, move_location_array in enumerate(moves):\r\n\tfor move_location_index, has_move in enumerate(move_location_array):\r\n\t\t\r\n\t\tif has_move == False:\r\n\t\t\tcontinue\r\n\t\t\r\n\t\tif move_index % 2 == 0:\r\n\t\t\tfam = \"X\"\r\n\t\telse:\r\n\t\t\tfam = \"O\"\t\t\r\n\t\t\t\r\n\t\tboard[move_location_index] = fam\r\n\r\nboard[IN[1]] = \"X\"\r\n\r\nwinner = check_win()\r\ncomputer_move = False\r\n\r\nif winner:\r\n\tmoose.append(winner + ' is the winner!')\r\nelif turn == 8:\r\n\tmoose.append('Draw!')\r\nelse:\r\n\tcomputer_move = get_computer_move()\r\n\twinner = check_win()\r\n\tif winner:\r\n\t\tmoose.append(winner + ' is the winner!')\r\n\r\nOUT = computer_move, moose",
+      "Code": "import random,  sys, copy\r\n\r\nclass XNOComputer (object):\r\n    weight = [.5,.3,.5,\r\n            .3,.4,.3,\r\n            .5,.3,.5]\r\n    depth = 10\r\n\r\n    def __init__(self, board, wins, turn):\r\n        self.board = board\r\n        self.wins = wins\r\n        self.turn = turn\r\n        self.reset_test_board()\r\n        self.reset_test_turn()\r\n\r\n    def get_move(self):\r\n        next_move = []\r\n        weight = 0\r\n\r\n        for our_move_key, our_move_val in enumerate(self.testboard):\r\n            if our_move_val != False:\r\n                continue\r\n\r\n            for their_move_key, their_move_val in enumerate(self.testboard):\r\n                if their_move_val != False:\r\n                    continue\r\n\r\n                self.reset_test_turn()\r\n                self.reset_test_board()\r\n\r\n                if self.check_make_move(our_move_key):\r\n                    return our_move_key\r\n                if self.check_make_move(their_move_key):\r\n                    return their_move_key\r\n\r\n                self.reset_test_turn()\r\n                self.reset_test_board()\r\n\r\n                if self.check_make_move(their_move_key):\r\n                    return their_move_key\r\n                if self.check_make_move(our_move_key):\r\n                    return our_move_key\r\n\r\n            current_weight = self.weight[our_move_key]\r\n            if current_weight > weight:\r\n                next_move = [our_move_key]\r\n                weight = current_weight\r\n            elif current_weight == weight:\r\n                next_move.append(our_move_key)\r\n\r\n        return next_move[random.randrange(len(next_move))]\r\n\r\n    def check_make_move(self, key):\r\n        if self.testturn % 2 == 0:\r\n            self.testboard[key] = 'X'\r\n        else:\r\n            self.testboard[key] = 'O'\r\n\r\n        self.testturn += 1\r\n\r\n        if self.check_win():\r\n            return True\r\n\r\n        return False\r\n\r\n    def check_win(self):\r\n        for possible_pos in range(len(self.wins)): # loop all possible win combos\r\n            possible_winner = ''\r\n            for pos in range(len(self.wins[possible_pos])): # loop current win positions\r\n                current = self.testboard[self.wins[possible_pos][pos]] # get current board value from this possible win position\r\n                if current == False: # ignore if not x or o\r\n                    break\r\n                if not pos: # store x or o if this is the start of the current check and skip\r\n                    possible_winner = current\r\n                    continue\r\n                if possible_winner != current: # if position value differs, no win given\r\n                    break\r\n                if (pos == 2 and possible_winner == current): # if all positions in win combo match then a win is given\r\n                    return possible_winner\r\n        return False # otherwise False is given\r\n\r\n    def reset_test_board(self):\r\n        self.testboard = copy.deepcopy(self.board)\r\n\r\n    def reset_test_turn(self):\r\n        self.testturn = copy.deepcopy(self.turn)\r\n\r\nmoose = [ ] \r\nwins = [ # possible win combos\r\n\trange(0, 2 + 1), # rows\r\n\trange(3, 5 + 1),\r\n\trange(6, 8 + 1),\r\n\trange(0, 6 + 1, 3), # cols\r\n\trange(1, 7 + 1, 3),\r\n\trange(2, 8 + 1, 3),\r\n\trange(0, 8 + 1, 4), # diags\r\n\trange(2, 6 + 1, 2),\r\n]\r\n\r\ndef check_win():\r\n\tfor possible_pos in range(len(wins)): # loop all possible win combos\r\n\t\tpossible_winner = ''\r\n\t\tfor pos in range(len(wins[possible_pos])): # loop current win positions\r\n\t\t\tcurrent = board[wins[possible_pos][pos]] # get current board value from this possible win position\r\n\t\t\tif current == False: # ignore if not x or o\r\n\t\t\t\tbreak\r\n\t\t\tif not pos: # store x or o if this is the start of the current check and skip\r\n\t\t\t\tpossible_winner = current\r\n\t\t\t\tcontinue\r\n\t\t\tif possible_winner != current: # if position value differs, no win given\r\n\t\t\t\tbreak\r\n\t\t\tif (pos == 2 and possible_winner == current): # if all positions in win combo match then a win is given\r\n\t\t\t\treturn possible_winner\r\n\treturn False # otherwise False is given\r\n\r\ndef get_computer_move():\r\n\tpossible_moves = []\r\n\tfor index, value in enumerate(board):\r\n\t\tif value is not False:\r\n\t\t    continue\r\n\t\tpossible_moves.append(index)\r\n\tcomputer_move = possible_moves[random.randrange(len(possible_moves))]\r\n\tboard[computer_move] = \"O\"\r\n\treturn computer_move  \t\t\r\n\r\ntry: \r\n\tmoves = IN[0]\r\n\tturn = len(moves)\r\nexcept:\r\n\tmoves = [[False*9]]\r\n\tturn = len(moves)\r\n\r\nboard = [False for pos in range(9)]\r\n\r\nfor move_index, move_location_array in enumerate(moves):\r\n\tfor move_location_index, has_move in enumerate(move_location_array):\r\n\t\t\r\n\t\tif has_move == False:\r\n\t\t\tcontinue\r\n\t\t\r\n\t\tif move_index % 2 == 0:\r\n\t\t\tfam = \"X\"\r\n\t\telse:\r\n\t\t\tfam = \"O\"\t\t\r\n\t\t\t\r\n\t\tboard[move_location_index] = fam\r\n\r\nboard[IN[1]] = \"X\"\r\n\r\nwinner = check_win()\r\ncomputer_move = False\r\n\r\nif winner:\r\n\tmoose.append(winner + ' is the winner!')\r\nelif turn == 8:\r\n\tmoose.append('Draw!')\r\nelse:\r\n\tboard_copy = copy.deepcopy(board)\r\n\tturn_copy = copy.deepcopy(turn)\r\n\tcomputed = XNOComputer(board_copy, wins, turn_copy)\r\n\tcomputer_move = computed.get_move()\r\n\tboard[computer_move] = 'O'\r\n\twinner = check_win()\r\n\tif winner:\r\n\t\tmoose.append(winner + ' is the winner!')\r\n\r\nOUT = computer_move, moose",
       "VariableInputPorts": true,
       "Id": "1b928a50c2ce48bab873bfc50f61d412",
       "Inputs": [
@@ -518,57 +518,6 @@
       ],
       "Replication": "Auto",
       "Description": "Swaps rows and columns in a list of lists. If there are some rows that are shorter than others, null values are inserted as place holders in the resultant array such that it is always rectangular.\n\nList.Transpose (lists: var[]..[]): var[]..[]"
-    },
-    {
-      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nclr.AddReference('System.Windows.Forms')\r\nclr.AddReference('System.Drawing')\r\n\r\nfrom System.Drawing import *\r\nfrom System.Windows.Forms import *\r\nfrom System import Array, Object\r\n\r\nclass SimpleForm(Form):\r\n    def __init__(self):\r\n        \r\n        # The text to show in the top bar\r\n        self.Text = \"A Simple Form\"\r\n        # The width of the form in pixels\r\n        self.Width = 250\r\n        # The height of the form in pixels\r\n        self.Height = 240\r\n        # Make the form a fixed size\r\n        self.FormBorderStyle = FormBorderStyle.FixedDialog\t\t\r\n        # Position the form in the center of the screen\r\n        self.StartPosition = FormStartPosition.CenterScreen \r\n        # Bring the form to the front of all windows\r\n        self.TopMost = True\r\n        # Show top bar controls\t\r\n        self.ControlBox = True\r\n        self.MaximizeBox = False\r\n        self.MinimiseBox = True\r\n        \r\n        # Add a button\r\n        self.button1 = Button()\r\n        # Set the button text\r\n        self.button1.Text = 'Value 1'\r\n        # Define what happens when you click the button\r\n        self.button1.Click += self.save\r\n        \r\n        # Set the button width\r\n        self.button1.Width = 100\r\n        # Set the button height\r\n        self.button1.Height = 180\r\n        # Set the button location offset from the top left form pixel\r\n        self.button1.Location = Point(10,10)\r\n        # Set the background color for the button\r\n        self.button1.BackColor = Color.Green\r\n        # Add the button the form\r\n        self.Controls.Add(self.button1)\r\n        \r\n        # Add another button\r\n        self.button2 = Button()\r\n        # Set the button text\r\n        self.button2.Text = 'Value 2'\r\n        # Define what happens when you click the button\r\n        self.button2.Click += self.save2\r\n        \r\n        # Set the button width\r\n        self.button2.Width = 100\r\n        # Set the button height\r\n        self.button2.Height = 180\r\n        # Set the button location offset from the top left form pixel\r\n        self.button2.Location = Point(120,10)\r\n        # Set the background color for the button\r\n        self.button2.BackColor = Color.Red\r\n        # Add the button the form\r\n        self.Controls.Add(self.button2)\r\n\r\n    # Define what happens when you click the button\t\t\r\n    def save(self, sender, event):\r\n        self.output = \"Output chosen was Value 1\";\r\n        # Close the form\r\n        self.Close();\r\n\r\n    # Define what happens when you click the other button\t\t\r\n    def save2(self, sender, event):\r\n        self.output = \"Output chosen was Value 2\";\r\n        # Close the form\r\n        self.Close();\r\n\r\nrunMe = IN[0]\r\n\r\nif runMe:\r\n    # Create the form\r\n    form = SimpleForm()\r\n    # Run the form\r\n    Application.Run(form)\r\n    # Get the output of the form\r\n    OUT = form.output\r\nelse:\r\n    OUT = \"Set RunMe to True\";",
-      "VariableInputPorts": true,
-      "Id": "224628581ed140c7ac0e8a19feac239a",
-      "Inputs": [
-        {
-          "Id": "603d67c0fdcd40b7b292c0d7d876becb",
-          "Name": "IN[0]",
-          "Description": "Input #0",
-          "UsingDefaultValue": false,
-          "Level": 2,
-          "UseLevels": false,
-          "KeepListStructure": false
-        }
-      ],
-      "Outputs": [
-        {
-          "Id": "36e6261dc2cf4cf18860c3648f2b7c27",
-          "Name": "OUT",
-          "Description": "Result of the python script",
-          "UsingDefaultValue": false,
-          "Level": 2,
-          "UseLevels": false,
-          "KeepListStructure": false
-        }
-      ],
-      "Replication": "Disabled",
-      "Description": "Runs an embedded IronPython script."
-    },
-    {
-      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
-      "NodeType": "CodeBlockNode",
-      "Code": "true;",
-      "Id": "40ed51f6a6204584a19eee1dd7bb32b7",
-      "Inputs": [],
-      "Outputs": [
-        {
-          "Id": "a94b15cae06e424aa6219ea3b6f87e9f",
-          "Name": "",
-          "Description": "Value of expression at line 1",
-          "UsingDefaultValue": false,
-          "Level": 2,
-          "UseLevels": false,
-          "KeepListStructure": false
-        }
-      ],
-      "Replication": "Disabled",
-      "Description": "Allows for DesignScript code to be authored directly"
     },
     {
       "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
@@ -1547,8 +1496,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 12.553985996934728,
-        "Y": 595.5336800224328
+        "X": 55.4575457818255,
+        "Y": 594.63465909285094
       },
       {
         "ShowGeometry": false,
@@ -1629,26 +1578,6 @@
         "Excluded": false,
         "X": -2317.68340781447,
         "Y": 174.66228123839716
-      },
-      {
-        "ShowGeometry": true,
-        "Name": "Python Script",
-        "Id": "224628581ed140c7ac0e8a19feac239a",
-        "IsSetAsInput": false,
-        "IsSetAsOutput": false,
-        "Excluded": false,
-        "X": -517.29951757749654,
-        "Y": 17.643474756471875
-      },
-      {
-        "ShowGeometry": true,
-        "Name": "Code Block",
-        "Id": "40ed51f6a6204584a19eee1dd7bb32b7",
-        "IsSetAsInput": false,
-        "IsSetAsOutput": false,
-        "Excluded": false,
-        "X": -628.41800844698116,
-        "Y": 20.990373370256748
       },
       {
         "ShowGeometry": true,
@@ -1999,23 +1928,6 @@
         "Background": "#FF848484"
       },
       {
-        "Id": "1709b573246a496f98011d79616c0956",
-        "Title": "That fun pop up",
-        "Nodes": [
-          "224628581ed140c7ac0e8a19feac239a",
-          "40ed51f6a6204584a19eee1dd7bb32b7"
-        ],
-        "Left": -638.41800844698116,
-        "Top": -78.356525243528125,
-        "Width": 255.11849086948462,
-        "Height": 192.34689861378487,
-        "FontSize": 36.0,
-        "InitialTop": 17.643474756471875,
-        "InitialHeight": 148.34689861378487,
-        "TextblockHeight": 86.0,
-        "Background": "#FFC1D676"
-      },
-      {
         "Id": "8ae2af356d0a409ba6bb706719e0221a",
         "Title": "End of game pop up",
         "Nodes": [
@@ -2059,31 +1971,15 @@
           "1b928a50c2ce48bab873bfc50f61d412",
           "7d93077a0c584824b193fa9bb5abeb76"
         ],
-        "Left": 2.5539859969347276,
-        "Top": 506.28104558281188,
-        "Width": 134.43022799554836,
-        "Height": 208.25263443962092,
+        "Left": -105.3832416463674,
+        "Top": 541.63465909285094,
+        "Width": 294.84078742819293,
+        "Height": 172.0,
         "FontSize": 36.0,
-        "InitialTop": 559.28104558281188,
-        "InitialHeight": 181.25263443962092,
+        "InitialTop": 594.63465909285094,
+        "InitialHeight": 184.40893397701677,
         "TextblockHeight": 43.0,
         "Background": "#FF848484"
-      },
-      {
-        "Id": "657251f86209417cb2e6e6005ebe61c8",
-        "Title": "NOTES",
-        "Nodes": [
-          "3382d66b77064ccfa5e228067d31df99"
-        ],
-        "Left": -12.10968218807767,
-        "Top": 335.12873968555067,
-        "Width": 166.0,
-        "Height": 97.0,
-        "FontSize": 36.0,
-        "InitialTop": 388.12873968555067,
-        "InitialHeight": 140.0,
-        "TextblockHeight": 43.0,
-        "Background": "#FFC1D676"
       },
       {
         "Id": "345140caf1794e3d80d741da264f45ad",
@@ -2098,23 +1994,9 @@
         "Height": 151.62208263332809,
         "FontSize": 36.0,
         "InitialTop": 861.393004167528,
-        "InitialHeight": 128.62208263332809,
+        "InitialHeight": 150.62208263332809,
         "TextblockHeight": 43.0,
         "Background": "#FF848484"
-      },
-      {
-        "Id": "0293225de6e2412a8bef02b8a07856d0",
-        "Title": "Because Dynamo is static... you have to move... wait.. move..\r\n\r\nSo code needs to be split.\r\n\r\nSo... first move mouse click in Revit\r\nIF click is invalid the go is forsaken. \r\n\r\nIf valid the square is logged... passed to the next script - computer moves THEN pop-up showing computers move.\r\n\r\nThen another click of mouse by user...\r\n\r\nThis has to be wait for and repeated nodes.\r\n\r\nWhen finished there will be pop up... then a replay in Revit. \r\n\r\nMaybe Data Remember node..\r\nThen periodic run ? ",
-        "Nodes": [],
-        "Left": 953.8681801675541,
-        "Top": 116.57070622285659,
-        "Width": 0.0,
-        "Height": 0.0,
-        "FontSize": 36.0,
-        "InitialTop": 0.0,
-        "InitialHeight": 0.0,
-        "TextblockHeight": 0.0,
-        "Background": "#FFC1D676"
       },
       {
         "Id": "abbb534b4d494b01a84b179cc68c4b4c",
@@ -2260,22 +2142,8 @@
         "Id": "7d93077a0c584824b193fa9bb5abeb76",
         "Title": "Main game code",
         "Nodes": [],
-        "Left": 17.984213992483092,
-        "Top": 559.28104558281188,
-        "Width": 0.0,
-        "Height": 0.0,
-        "FontSize": 36.0,
-        "InitialTop": 0.0,
-        "InitialHeight": 0.0,
-        "TextblockHeight": 0.0,
-        "Background": "#FFC1D676"
-      },
-      {
-        "Id": "3382d66b77064ccfa5e228067d31df99",
-        "Title": "Does not output O wins",
-        "Nodes": [],
-        "Left": -2.10968218807767,
-        "Top": 388.12873968555067,
+        "Left": -95.3832416463674,
+        "Top": 639.043593069868,
         "Width": 0.0,
         "Height": 0.0,
         "FontSize": 36.0,
@@ -2285,8 +2153,8 @@
         "Background": "#FFC1D676"
       }
     ],
-    "X": 1149.3186418677287,
-    "Y": 81.461337517322136,
-    "Zoom": 0.45680602708236517
+    "X": 832.92381246432944,
+    "Y": 266.97712039687332,
+    "Zoom": 0.26117593191789279
   }
 }
